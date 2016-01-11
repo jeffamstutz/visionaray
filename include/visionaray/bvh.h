@@ -18,6 +18,10 @@
 #include <thrust/device_vector.h>
 #endif
 
+#ifdef VSNRAY_HAVE_SYCL
+#include <CL/sycl.hpp>
+#endif
+
 #include "math/aabb.h"
 #include "aligned_vector.h"
 #include "tags.h"
@@ -27,6 +31,10 @@ namespace visionaray
 namespace detail
 {
 
+//-------------------------------------------------------------------------------------------------
+// Consolidate interface of stl/thrust/sycl container types
+//
+
 template <typename Container>
 auto get_pointer(Container const& vec)
     -> decltype(vec.data())
@@ -34,11 +42,35 @@ auto get_pointer(Container const& vec)
     return vec.data();
 }
 
+template <typename Container>
+size_t get_size(Container const& vec)
+{
+    return vec.size();
+}
+
 #ifdef __CUDACC__
 template <typename T>
 T const* get_pointer(thrust::device_vector<T> const& vec)
 {
     return thrust::raw_pointer_cast(vec.data());
+}
+#endif
+
+#ifdef VSNRAY_HAVE_SYCL
+template <typename T>
+T* get_pointer(cl::sycl::buffer<T> const& buf)
+{
+    using namespace cl::sycl;
+    auto a = buf.template get_access<access::read>();
+    return &*a.begin();
+}
+
+template <typename T>
+size_t get_size(cl::sycl::buffer<T> const& buf)
+{
+    using namespace cl::sycl;
+    auto a = buf.template get_access<access::read>();
+    return a.get_size();
 }
 #endif
 } // detail
@@ -255,8 +287,8 @@ public:
 
     template <typename PV, typename NV>
     explicit bvh_t(bvh_t<PV, NV> const& rhs)
-        : primitives_(rhs.primitives())
-        , nodes_(rhs.nodes())
+        : primitives_(rhs.primitives().begin(), rhs.primitives().end())
+        , nodes_(rhs.nodes().begin(), rhs.nodes().end())
     {
     }
 
@@ -272,10 +304,10 @@ public:
     bvh_ref ref() const
     {
         auto p0 = detail::get_pointer(primitives());
-        auto p1 = p0 + primitives().size();
+        auto p1 = p0 + detail::get_size(primitives());
 
         auto n0 = detail::get_pointer(nodes());
-        auto n1 = n0 + nodes().size();
+        auto n1 = n0 + detail::get_size(nodes());
 
         return { p0, p1, n0, n1 };
     }
@@ -332,9 +364,9 @@ public:
 
     template <typename PV, typename NV, typename IV>
     explicit index_bvh_t(index_bvh_t<PV, NV, IV> const& rhs)
-        : primitives_(rhs.primitives())
-        , nodes_(rhs.nodes())
-        , indices_(rhs.indices())
+        : primitives_(rhs.primitives().begin(), rhs.primitives().end())
+        , nodes_(rhs.nodes().begin(), rhs.nodes().end())
+        , indices_(rhs.indices().begin(), rhs.indices().end())
     {
     }
 
@@ -353,13 +385,13 @@ public:
     bvh_ref ref() const
     {
         auto p0 = detail::get_pointer(primitives());
-        auto p1 = p0 + primitives().size();
+        auto p1 = p0 + detail::get_size(primitives());
 
         auto n0 = detail::get_pointer(nodes());
-        auto n1 = n0 + nodes().size();
+        auto n1 = n0 + detail::get_size(nodes());
 
         auto i0 = detail::get_pointer(indices());
-        auto i1 = i0 + indices().size();
+        auto i1 = i0 + detail::get_size(indices());
 
         return { p0, p1, n0, n1, i0, i1 };
     }
@@ -436,6 +468,12 @@ template <typename P>
 using cuda_index_bvh    = index_bvh_t<thrust::device_vector<P>, thrust::device_vector<bvh_node>, thrust::device_vector<unsigned>>;
 #endif
 
+#ifdef VSNRAY_HAVE_SYCL
+template <typename P>
+using sycl_bvh          = bvh_t<cl::sycl::buffer<P>, cl::sycl::buffer<bvh_node>>;
+template <typename P>
+using sycl_index_bvh    = index_bvh_t<cl::sycl::buffer<P>, cl::sycl::buffer<bvh_node>, cl::sycl::buffer<unsigned>>;
+#endif
 
 //-------------------------------------------------------------------------------------------------
 // build() interface
