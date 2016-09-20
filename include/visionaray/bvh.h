@@ -61,7 +61,7 @@ template <typename T>
 T* get_pointer(cl::sycl::buffer<T> const& buf)
 {
     using namespace cl::sycl;
-    auto a = buf.template get_access<access::read>();
+    auto a = buf.template get_access<access::mode::read>();
     return &*a.begin();
 }
 
@@ -69,7 +69,7 @@ template <typename T>
 size_t get_size(cl::sycl::buffer<T> const& buf)
 {
     using namespace cl::sycl;
-    auto a = buf.template get_access<access::read>();
+    auto a = buf.template get_access<access::mode::read>();
     return a.get_size();
 }
 #endif

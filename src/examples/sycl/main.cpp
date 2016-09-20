@@ -129,7 +129,7 @@ void renderer::on_display()
 
             C clr(1.0);
 
-            auto n = get_normal(mod.normals.data(), hit_rec, normals_per_face_binding());
+            auto n = get_normal(mod.geometric_normals.data(), hit_rec, normals_per_face_binding());
 
             // Make an ortho basis (TODO: move to library)
             auto w = n;
@@ -257,7 +257,7 @@ int main(int argc, char** argv)
 
     // Copy data to GPU
     rend.device_bvh = renderer::device_bvh_type(rend.host_bvh);
-/*    rend.device_normals = rend.mod.normals;
+/*    rend.device_normals = rend.mod.geometric_normals;
     rend.device_materials = rend.mod.materials;*/
 
 

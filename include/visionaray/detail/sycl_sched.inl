@@ -47,13 +47,13 @@ void sycl_sched<R>::frame(K kernel, SP sched_params, unsigned frame_num)
     q.submit([&](handler& cmdgroup)
     {
         cmdgroup.parallel_for<class SYCLKernel>(
-            range<2>(viewport.w, viewport.h),
+            range<2>(sched_params.rt.width(), sched_params.rt.height()),
             [=](id<2> id)
             {
                 auto x = id[0];
                 auto y = id[1];
 
-                if (x < viewport.x || y < viewport.y || x >= viewport.w || y >= viewport.h)
+                if (x >= sched_params.rt.width() || y >= sched_params.rt.height())
                 {
                     return;
                 }
@@ -67,7 +67,8 @@ void sycl_sched<R>::frame(K kernel, SP sched_params, unsigned frame_num)
                         samp,
                         x,
                         y,
-                        viewport,
+                        sched_params.rt.width(),
+                        sched_params.rt.height(),
                         eye,
                         cam_u,
                         cam_v,
@@ -83,7 +84,8 @@ void sycl_sched<R>::frame(K kernel, SP sched_params, unsigned frame_num)
                         rt_ref,
                         x,
                         y,
-                        viewport,
+                        sched_params.rt.width(),
+                        sched_params.rt.height(),
                         eye,
                         cam_u,
                         cam_v,
