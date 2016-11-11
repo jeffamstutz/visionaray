@@ -25,6 +25,7 @@
 
 #include <common/model.h>
 #include <common/obj_loader.h>
+#include <common/timer.h>
 #include <common/viewer_glut.h>
 
 using namespace visionaray;
@@ -38,7 +39,7 @@ using viewer_type = viewer_glut;
 
 struct renderer : viewer_type
 {
-    using host_ray_type = basic_ray<simd::float4>;
+    using host_ray_type = basic_ray<float>;
 
     renderer()
         : viewer_type(512, 512, "Visionaray Ambient Occlusion Example")
@@ -104,6 +105,8 @@ void renderer::on_display()
     auto prims_end   = bvhs.data() + bvhs.size();
 
     auto bgcolor = background_color();
+
+    timer t;
 
     host_sched.frame([&](R ray, random_sampler<S>& samp) -> result_record<S>
     {
@@ -183,6 +186,8 @@ void renderer::on_display()
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     host_rt.display_color_buffer();
+
+    std::cout << "Time to frame: " << t.elapsed() << '\n';
 }
 
 
@@ -249,6 +254,7 @@ int main(int argc, char** argv)
     }
 
     std::cout << "Creating BVH...\n";
+    timer t;
 
     rend.host_bvh = build<index_bvh<model::triangle_type>>(
             rend.mod.primitives.data(),
@@ -256,6 +262,8 @@ int main(int argc, char** argv)
             );
 
     std::cout << "Ready\n";
+    std::cout << "Time to build: " << t.elapsed() << '\n';
+    std::cout << "###############\n";
 
     float aspect = rend.width() / static_cast<float>(rend.height());
 
