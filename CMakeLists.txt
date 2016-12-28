@@ -18,6 +18,33 @@ include(VisionarayUsePackage)
 
 
 #--------------------------------------------------------------------------------------------------
+# Setup default build type and set valid build types
+#
+
+SET(CONFIGURATION_TYPES "Debug;Release;RelWithDebInfo")
+IF (WIN32)
+  IF (NOT OSPRAY_DEFAULT_CMAKE_CONFIGURATION_TYPES_SET)
+    SET(CMAKE_CONFIGURATION_TYPES "${CONFIGURATION_TYPES}"
+        CACHE STRING "List of generated configurations." FORCE)
+    SET(OSPRAY_DEFAULT_CMAKE_CONFIGURATION_TYPES_SET ON
+        CACHE INTERNAL "Default CMake configuration types set.")
+  ENDIF()
+ELSE()
+  IF(NOT CMAKE_BUILD_TYPE)
+    SET(CMAKE_BUILD_TYPE "Release" CACHE STRING "Choose the build type." FORCE)
+  ENDIF()
+  SET_PROPERTY(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS ${CONFIGURATION_TYPES})
+ENDIF()
+
+#--------------------------------------------------------------------------------------------------
+# CMake policies to control backward compatible behavior
+#
+
+SET(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)
+SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
+
+
+#--------------------------------------------------------------------------------------------------
 # CMake policies to control backward compatible behavior
 #
 
