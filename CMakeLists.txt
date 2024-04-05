@@ -2,13 +2,13 @@
 # See the LICENSE file for details.
 
 include(CMakePackageConfigHelpers)
-cmake_minimum_required(VERSION 3.1.3)
+cmake_minimum_required(VERSION 3.27)
 project(visionaray VERSION 0.3.4 LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH}
+list(APPEND CMAKE_MODULE_PATH
     ${PROJECT_SOURCE_DIR}/cmake
     ${PROJECT_SOURCE_DIR}/cmake/modules
 )
